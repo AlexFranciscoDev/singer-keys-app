@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//usr/local/**)",
+      "Read(//Users/alexft/.nvm/**)",
+      "Read(//Users/alexft/**)",
+      "Bash(export PATH=$PATH:/opt/homebrew/bin)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(/Users/alexft/Documents/frontend/singers-keys-manager/.gitignore:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

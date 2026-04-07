@@ -1,0 +1,55 @@
+import { useEffect, useState } from 'react'
+import {
+  onSnapshot, query, where, getDocs,
+  addDoc, updateDoc, doc, writeBatch,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { db } from '@/firebase/config'
+import { singersRef, singerSongsRef } from '@/firebase/collections'
+import { useAuth } from '@/context/AuthContext'
+import type { Singer } from '@/types'
+
+export function useSingers() {
+  const { user } = useAuth()
+  const [singers, setSingers] = useState<Singer[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { setSingers([]); setLoading(false); return }
+
+    const q = query(singersRef(), where('uid', '==', user.uid))
+    const unsub = onSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Singer, 'id'>),
+        createdAt: d.data().createdAt?.toDate() ?? new Date(),
+      }))
+      list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      setSingers(list)
+      setLoading(false)
+    }, () => setLoading(false))
+    return unsub
+  }, [user])
+
+  async function addSinger(name: string) {
+    if (!user) return
+    await addDoc(singersRef(), { name: name.trim(), uid: user.uid, createdAt: serverTimestamp() })
+  }
+
+  async function updateSinger(id: string, name: string) {
+    await updateDoc(doc(db, 'singers', id), { name: name.trim() })
+  }
+
+  async function deleteSinger(id: string) {
+    const batch = writeBatch(db)
+    batch.delete(doc(db, 'singers', id))
+
+    const q = query(singerSongsRef(), where('singerId', '==', id))
+    const snap = await getDocs(q)
+    snap.docs.forEach((d) => batch.delete(d.ref))
+
+    await batch.commit()
+  }
+
+  return { singers, loading, addSinger, updateSinger, deleteSinger }
+}
