@@ -14,8 +14,9 @@ export function useSongs() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // If there's no user, empty songs and set loading false (not show)
     if (!user) { setSongs([]); setLoading(false); return }
-
+    // Otherwise, get songs of the user logged in
     const q = query(songsRef(), where('uid', '==', user.uid))
     const unsub = onSnapshot(q, (snap) => {
       setSongs(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Song, 'id'>) })))

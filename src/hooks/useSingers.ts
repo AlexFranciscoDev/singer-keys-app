@@ -24,6 +24,7 @@ export function useSingers() {
         ...(d.data() as Omit<Singer, 'id'>),
         createdAt: d.data().createdAt?.toDate() ?? new Date(),
       }))
+      // Sort list by createdAt
       list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       setSingers(list)
       setLoading(false)
@@ -31,15 +32,29 @@ export function useSingers() {
     return unsub
   }, [user])
 
+  /*
+  * addSinger
+  * Create new singer with
+  */
   async function addSinger(name: string) {
+    // If not user logged, don't do anything
     if (!user) return
     await addDoc(singersRef(), { name: name.trim(), uid: user.uid, createdAt: serverTimestamp() })
   }
 
+  /**
+   * updateSinger
+   * @param id (singer to update)
+   * @param name (new name)
+   */
   async function updateSinger(id: string, name: string) {
     await updateDoc(doc(db, 'singers', id), { name: name.trim() })
   }
 
+  /**
+   * deleteSinger
+   * @param id (singer to delete)
+   */
   async function deleteSinger(id: string) {
     const batch = writeBatch(db)
     batch.delete(doc(db, 'singers', id))
